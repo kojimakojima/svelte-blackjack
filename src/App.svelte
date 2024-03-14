@@ -274,7 +274,7 @@
         <button on:click={restart} class="rounded-sm bg-purple-600 p-1">
           GO BACK TO MENU
         </button>
-      {:else}{/if}
+      {/if}
       {#if !isStand && !isPlayerBust}
         {#if !is21}
           <button on:click={hit} class="rounded-sm bg-sky-600 p-1">HIT</button>
