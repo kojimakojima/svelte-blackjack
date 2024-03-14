@@ -5,6 +5,8 @@
   // Game State
   let isLoading: boolean = false;
   let isStarted: boolean = false;
+  let isEnded: boolean = false;
+  let winCount: number = 0;
 
   // Deck
   let deckId: string = "";
@@ -14,6 +16,8 @@
   let playerTotalNum: number = 0;
   let isPlayerBust: boolean = false;
   let isPlayerBlackjack: boolean = false;
+  let isStand: boolean = false;
+  let is21: boolean = false;
 
   // Dealer
   let dealerCards: Array<CardType> = [];
@@ -24,11 +28,22 @@
   const start = async () => {
     await shuffle();
     await dealerDraw(1);
-    await playerDraw(2);
+    await playerDraw(1);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await playerDraw(1);
     isStarted = true;
   };
-  const end = async () => {
+  const restart = async () => {
     location.reload();
+  };
+  const checkResult = () => {};
+  const stand = async () => {
+    isStand = true;
+    while (dealerTotalNum <= 17) {
+      await dealerDraw(1);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    isEnded = true;
   };
   const shuffle = async () => {
     const url = `https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1`;
@@ -68,6 +83,7 @@
 
       isPlayerBlackjack = checkBlackjack(playerCards);
       isPlayerBust = checkBust(playerTotalNum);
+      if (playerTotalNum === 21) is21 = true;
       console.log(playerTotalNum);
     } catch (e) {
       console.log(e);
@@ -77,6 +93,8 @@
     const url = `https://deckofcardsapi.com/api/deck/${deckId}/draw/?count=${num}`;
 
     try {
+      // Cannot draw when over 17
+      if (dealerTotalNum > 17) return;
       const res = await fetch(url);
       const data: DeckType = await res.json();
       console.log(data);
@@ -105,45 +123,41 @@
   };
 </script>
 
-<main>
+<main class="flex flex-col items-center">
+  <h1 class="p-4 text-2xl font-bold">ブラックジャック</h1>
+  <!-- CARD DISPLAY -->
   <div>
-    <p>Your cards:</p>
-    {#each playerCards as card, i}
-      <p>{card.value}</p>
-    {/each}
-    <p>Your total number: {playerTotalNum}</p>
-
     <p>Dealer cards:</p>
-    {#each dealerCards as card, i}
-      <p>{card.value}</p>
-    {/each}
+    <div class="flex justify-center">
+      {#each dealerCards as card, i}
+        <p><img src={card.images.png} alt="" class="w-24" /></p>
+      {/each}
+    </div>
     <p>Dealer total number: {dealerTotalNum}</p>
+
+    <p>Your cards:</p>
+    <div class="flex justify-center">
+      {#each playerCards as card, i}
+        <p><img src={card.images.png} alt="" class="w-24" /></p>
+      {/each}
+    </div>
+    <p>Your total number: {playerTotalNum}</p>
   </div>
-  {#if isStarted}
-    <button on:click={end} class="rounded-sm bg-purple-600 p-1"> END </button>
-  {:else}
-    <button
-      on:click={start}
-      class="rounded-sm bg-purple-600 p-1"
-      disabled={isLoading}
-    >
-      {#if isLoading}
-        Shuffling...
-      {:else}
-        START
-      {/if}
-    </button>
-  {/if}
-  {#if isStarted}
-    <button on:click={() => playerDraw(1)} class="rounded-sm bg-sky-600 p-1"
-      >HIT</button
-    >
-    <button on:click={() => dealerDraw(1)} class="rounded-sm bg-red-600 p-1"
-      >STAND</button
-    >
-    <button on:click={() => dealerDraw(1)} class="rounded-sm bg-sky-600 p-1"
-      >DEALER HIT</button
-    >
+  <!-- STATUS DISPLAY -->
+  <div>
+    {#if !isStarted}
+      <button
+        on:click={start}
+        class="rounded-sm bg-purple-600 p-1"
+        disabled={isLoading}
+      >
+        {#if isLoading}
+          Shuffling...
+        {:else}
+          START
+        {/if}
+      </button>
+    {/if}
     {#if isPlayerBust}
       <p>Player BUST</p>
     {/if}
@@ -156,5 +170,25 @@
     {#if isDealerBlackjack}
       <p>Dealer BLACKJACK</p>
     {/if}
-  {/if}
+  </div>
+  <!-- GAME CONTROL -->
+  <div>
+    {#if isStarted}
+      {#if isEnded || isPlayerBust}
+        <button on:click={restart} class="rounded-sm bg-purple-600 p-1">
+          RESTART
+        </button>
+      {/if}
+      {#if !isStand && !isPlayerBust}
+        {#if !is21}
+          <button
+            on:click={() => playerDraw(1)}
+            class="rounded-sm bg-sky-600 p-1">HIT</button
+          >
+        {/if}
+        <button on:click={stand} class="rounded-sm bg-red-600 p-1">STAND</button
+        >
+      {/if}
+    {/if}
+  </div>
 </main>
