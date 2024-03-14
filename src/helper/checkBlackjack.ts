@@ -7,6 +7,7 @@ export default function checkBlackjack(cards: Array<CardType>): boolean {
       case "ACE":
         ace++;
         break;
+      case "10":
       case "JACK":
       case "QUEEN":
       case "KING":
