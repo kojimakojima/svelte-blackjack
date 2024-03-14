@@ -5,8 +5,10 @@
   // Game State
   let isLoading: boolean = false;
   let isStarted: boolean = false;
+  let isHitting: boolean = false;
   let isEnded: boolean = false;
   let winCount: number = 0;
+  let state: number = 0;
 
   // Deck
   let deckId: string = "";
@@ -25,6 +27,9 @@
   let isDealerBust: boolean = false;
   let isDealerBlackjack: boolean = false;
 
+  // Graphics Related
+  let isHoveredH1 = false;
+
   const start = async () => {
     await shuffle();
     await dealerDraw(1);
@@ -36,7 +41,68 @@
   const restart = async () => {
     location.reload();
   };
-  const checkResult = () => {};
+  const nextRound = async () => {
+    reset();
+    await shuffle();
+    await dealerDraw(1);
+    await playerDraw(1);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await playerDraw(1);
+  };
+  const checkResult = () => {
+    if (isDealerBust) {
+      state = 1;
+    } else if (isPlayerBust) {
+      state = 2;
+    } else if (playerTotalNum > dealerTotalNum) {
+      state = 1;
+    } else if (dealerTotalNum > playerTotalNum) {
+      state = 2;
+    } else if (playerTotalNum === playerTotalNum) {
+      state = 3;
+    } else {
+      state = 0;
+    }
+    switch (state) {
+      // Player Won
+      case 1:
+        winCount++;
+        break;
+      // Dealer Won
+      case 2:
+        winCount = 0;
+        break;
+      // Tie
+      case 3:
+        break;
+      default:
+        break;
+    }
+  };
+  const reset = () => {
+    // reset EXPECT isStarted, isHitting winCount
+    isEnded = false;
+    state = 0;
+    deckId = "";
+    playerCards = [];
+    playerTotalNum = 0;
+    isPlayerBust = false;
+    isPlayerBlackjack = false;
+    isStand = false;
+    is21 = false;
+    dealerCards = [];
+    dealerTotalNum = 0;
+    isDealerBust = false;
+    isDealerBlackjack = false;
+  };
+  const hit = async () => {
+    if (!isHitting) {
+      isHitting = true;
+      await playerDraw(1);
+      if (isPlayerBust) checkResult();
+      isHitting = false;
+    }
+  };
   const stand = async () => {
     isStand = true;
     while (dealerTotalNum <= 17) {
@@ -44,6 +110,7 @@
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
     isEnded = true;
+    checkResult();
   };
   const shuffle = async () => {
     const url = `https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1`;
@@ -84,7 +151,6 @@
       isPlayerBlackjack = checkBlackjack(playerCards);
       isPlayerBust = checkBust(playerTotalNum);
       if (playerTotalNum === 21) is21 = true;
-      console.log(playerTotalNum);
     } catch (e) {
       console.log(e);
     }
@@ -116,15 +182,40 @@
 
       isDealerBlackjack = checkBlackjack(dealerCards);
       isDealerBust = checkBust(dealerTotalNum);
-      console.log(dealerTotalNum);
     } catch (e) {
       console.log(e);
     }
   };
+
+  function handleMouseEnterH1() {
+    isHoveredH1 = true;
+  }
+  function handleMouseLeaveH1() {
+    isHoveredH1 = false;
+  }
 </script>
 
 <main class="flex flex-col items-center">
-  <h1 class="p-4 text-2xl font-bold">ブラックジャック</h1>
+  <h1
+    on:mouseenter={handleMouseEnterH1}
+    on:mouseleave={handleMouseLeaveH1}
+    class="my-4 bg-neutral-700 p-2 text-2xl font-bold tracking-tighter transition-transform hover:skew-y-3"
+  >
+    {#if isHoveredH1}
+      BLACKJACK
+    {:else}
+      ブラックジャック
+    {/if}
+  </h1>
+  <p>state: {state}</p>
+  <p>
+    {#if winCount === 1}
+      現在: {winCount}勝
+    {:else if winCount > 1}
+      現在: {winCount}連勝
+    {/if}
+  </p>
+
   <!-- CARD DISPLAY -->
   <div>
     <p>Dealer cards:</p>
@@ -175,16 +266,18 @@
   <div>
     {#if isStarted}
       {#if isEnded || isPlayerBust}
+        {#if (state === 1 || state === 3) && !isPlayerBust}
+          <button on:click={nextRound} class="rounded-sm bg-indigo-600 p-1">
+            NEXT ROUND
+          </button>
+        {/if}
         <button on:click={restart} class="rounded-sm bg-purple-600 p-1">
-          RESTART
+          GO BACK TO MENU
         </button>
-      {/if}
+      {:else}{/if}
       {#if !isStand && !isPlayerBust}
         {#if !is21}
-          <button
-            on:click={() => playerDraw(1)}
-            class="rounded-sm bg-sky-600 p-1">HIT</button
-          >
+          <button on:click={hit} class="rounded-sm bg-sky-600 p-1">HIT</button>
         {/if}
         <button on:click={stand} class="rounded-sm bg-red-600 p-1">STAND</button
         >
