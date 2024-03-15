@@ -1,14 +1,22 @@
 <script lang="ts">
-  import parseNum from "./helper/parseNum";
-  import checkBust from "./helper/checkBust";
-  import checkBlackjack from "./helper/checkBlackjack";
-
   import dealerAvatarNormal from "./assets/dealerAvatarNormal.png";
   import dealerAvatarLost from "./assets/dealerAvatarLost.png";
   import dealerAvatarWon from "./assets/dealerAvatarWon.png";
   import dealerAvatarTie from "./assets/dealerAvatarTie.png";
 
-  // Game State
+  //Helpers
+  import parseNum from "./helper/parseNum";
+  import checkBust from "./helper/checkBust";
+  import checkBlackjack from "./helper/checkBlackjack";
+
+  // Components
+  import Button from "./lib/Button.svelte";
+  import Title from "./lib/Title.svelte";
+  import CardDisplay from "./lib/CardDisplay.svelte";
+  import ResultDisplay from "./lib/ResultDisplay.svelte";
+  import GameControl from "./lib/GameControl.svelte";
+
+  //　#region Game State
   let isLoading: boolean = false;
   let isStarted: boolean = false;
   let isHitting: boolean = false;
@@ -16,28 +24,30 @@
   let winCount: number = 0;
   let state: number = 0;
   let result: string = "";
+  // #endregion
 
-  // Deck
+  // #region Deck
   let deckId: string = "";
+  // #endregion
 
-  // Player
+  // #region Player
   let playerCards: Array<CardType> = [];
   let playerTotalNum: number = 0;
   let isPlayerBust: boolean = false;
   let isPlayerBlackjack: boolean = false;
   let isStand: boolean = false;
   let is21: boolean = false;
+  // #endregion
 
-  // Dealer
+  // #region Dealer
   let dealerAvatar: string = dealerAvatarNormal;
   let dealerCards: Array<CardType> = [];
   let dealerTotalNum: number = 0;
   let isDealerBust: boolean = false;
   let isDealerBlackjack: boolean = false;
+  // #endregion
 
-  // Graphics Related
-  let isHoveredH1 = false;
-
+  // #region Functions
   const start = async () => {
     await shuffle();
     await dealerDraw(1);
@@ -219,132 +229,45 @@
       console.log(e);
     }
   };
-
-  function handleMouseEnterH1() {
-    isHoveredH1 = true;
-  }
-  function handleMouseLeaveH1() {
-    isHoveredH1 = false;
-  }
+  // #endregion
 </script>
 
 <main class="mx-auto flex max-w-7xl flex-col items-center px-2">
-  <h1
-    on:mouseenter={handleMouseEnterH1}
-    on:mouseleave={handleMouseLeaveH1}
-    class="my-2 w-full rounded bg-neutral-700 p-2 text-center text-xl font-bold tracking-tighter transition-transform hover:skew-y-3"
-  >
-    <span class="text-base">
-      {#if winCount === 1}
-        現在: {winCount}勝
-      {:else if winCount > 1}
-        現在: {winCount}連勝
-      {/if}
-    </span>
-    {#if isHoveredH1}
-      BLACKJACK
-    {:else}
-      ブラックジャック
-    {/if}
-  </h1>
-  <!-- <p>state: {state}</p> -->
-
+  <Title {winCount} />
   <!-- CARD DISPLAY -->
-  <div>
-    <p class="mb-2 flex justify-center">
-      <img
-        src={dealerAvatar}
-        alt=""
-        class="w-36 transition-transform hover:scale-105"
-      />
-    </p>
-    <!-- Dealer Cards -->
-    <div class="mb-8 flex justify-center gap-2">
-      {#each dealerCards as card, i}
-        <p>
-          <img
-            src={card.images.png}
-            alt=""
-            class="w-24 transition-transform hover:scale-105"
-          />
-        </p>
-      {/each}
-    </div>
-    <!-- <p>Dealer total number: {dealerTotalNum}</p> -->
-
-    <!-- Player Cards -->
-    <div class="mb-4 flex justify-center gap-2">
-      {#each playerCards as card, i}
-        <p>
-          <img
-            src={card.images.png}
-            alt=""
-            class="w-24 transition-transform hover:scale-105"
-          />
-        </p>
-      {/each}
-    </div>
-    <!-- <p>Your total number: {playerTotalNum}</p> -->
-  </div>
+  <CardDisplay {dealerAvatar} {dealerCards} {playerCards} />
   <!-- STATUS DISPLAY -->
   {#if result}
-    <div class="fixed inset-0 z-20 flex items-center justify-center">
-      <div
-        class="bg-black-800 rounded-sm bg-zinc-800 bg-opacity-80 p-2 text-center font-bold"
-      >
-        <p class="text-3xl">
-          {result}
-        </p>
-        {#if isPlayerBust}
-          <p class="text-xl">Player BUST</p>
-        {/if}
-        {#if isDealerBust}
-          <p class="text-xl">Dealer BUST</p>
-        {/if}
-        {#if isPlayerBlackjack}
-          <p class="text-xl">Player BLACKJACK</p>
-        {/if}
-        {#if isDealerBlackjack}
-          <p class="text-xl">Dealer BLACKJACK</p>
-        {/if}
-      </div>
-    </div>
+    <ResultDisplay
+      {result}
+      {isPlayerBust}
+      {isDealerBust}
+      {isPlayerBlackjack}
+      {isDealerBlackjack}
+    />
   {/if}
   <div>
     {#if !isStarted}
-      <button
-        on:click={start}
-        class="rounded-sm bg-purple-600 p-1"
-        disabled={isLoading}
-      >
+      <Button onClick={start} className="bg-purple-600" disabled={isLoading}>
         {#if isLoading}
           Shuffling...
         {:else}
           START
         {/if}
-      </button>
+      </Button>
     {/if}
   </div>
   <!-- GAME CONTROL -->
-  <div class="z-50">
-    {#if isStarted}
-      {#if isEnded || isPlayerBust}
-        {#if (state === 1 || state === 3) && !isPlayerBust}
-          <button on:click={nextRound} class="rounded-sm bg-indigo-600 p-1">
-            NEXT ROUND
-          </button>
-        {/if}
-        <button on:click={restart} class="rounded-sm bg-purple-600 p-1">
-          GO BACK TO MENU
-        </button>
-      {/if}
-      {#if !isStand && !isPlayerBust}
-        {#if !is21}
-          <button on:click={hit} class="rounded-sm bg-sky-600 p-1">HIT</button>
-        {/if}
-        <button on:click={stand} class="rounded-sm bg-red-600 p-1">STAND</button
-        >
-      {/if}
-    {/if}
-  </div>
+  <GameControl
+    {isStarted}
+    {isPlayerBust}
+    {isEnded}
+    {isStand}
+    {is21}
+    {state}
+    {nextRound}
+    {restart}
+    {hit}
+    {stand}
+  />
 </main>
