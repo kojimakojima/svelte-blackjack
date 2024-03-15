@@ -2,6 +2,12 @@
   import parseNum from "./helper/parseNum";
   import checkBust from "./helper/checkBust";
   import checkBlackjack from "./helper/checkBlackjack";
+
+  import dealerAvatarNormal from "./assets/dealerAvatarNormal.png";
+  import dealerAvatarLost from "./assets/dealerAvatarLost.png";
+  import dealerAvatarWon from "./assets/dealerAvatarWon.png";
+  import dealerAvatarTie from "./assets/dealerAvatarTie.png";
+
   // Game State
   let isLoading: boolean = false;
   let isStarted: boolean = false;
@@ -9,6 +15,7 @@
   let isEnded: boolean = false;
   let winCount: number = 0;
   let state: number = 0;
+  let result: string = "";
 
   // Deck
   let deckId: string = "";
@@ -22,6 +29,7 @@
   let is21: boolean = false;
 
   // Dealer
+  let dealerAvatar: string = dealerAvatarNormal;
   let dealerCards: Array<CardType> = [];
   let dealerTotalNum: number = 0;
   let isDealerBust: boolean = false;
@@ -66,14 +74,20 @@
     switch (state) {
       // Player Won
       case 1:
+        result = "You Won!";
         winCount++;
+        dealerAvatar = dealerAvatarLost;
         break;
       // Dealer Won
       case 2:
+        result = "You LOST...";
         winCount = 0;
+        dealerAvatar = dealerAvatarWon;
         break;
       // Tie
       case 3:
+        "Tie!";
+        dealerAvatar = dealerAvatarTie;
         break;
       default:
         break;
@@ -83,6 +97,7 @@
     // reset EXPECT isStarted, isHitting winCount
     isEnded = false;
     state = 0;
+    result = "";
     deckId = "";
     playerCards = [];
     playerTotalNum = 0;
@@ -90,6 +105,7 @@
     isPlayerBlackjack = false;
     isStand = false;
     is21 = false;
+    dealerAvatar = dealerAvatarNormal;
     dealerCards = [];
     dealerTotalNum = 0;
     isDealerBust = false;
@@ -195,46 +211,88 @@
   }
 </script>
 
-<main class="flex flex-col items-center">
+<main class="mx-auto flex max-w-7xl flex-col items-center px-2">
   <h1
     on:mouseenter={handleMouseEnterH1}
     on:mouseleave={handleMouseLeaveH1}
-    class="my-4 bg-neutral-700 p-2 text-2xl font-bold tracking-tighter transition-transform hover:skew-y-3"
+    class="my-2 w-full rounded bg-neutral-700 p-2 text-center text-xl font-bold tracking-tighter transition-transform hover:skew-y-3"
   >
+    <span class="text-base">
+      {#if winCount === 1}
+        現在: {winCount}勝
+      {:else if winCount > 1}
+        現在: {winCount}連勝
+      {/if}
+    </span>
     {#if isHoveredH1}
       BLACKJACK
     {:else}
       ブラックジャック
     {/if}
   </h1>
-  <p>state: {state}</p>
-  <p>
-    {#if winCount === 1}
-      現在: {winCount}勝
-    {:else if winCount > 1}
-      現在: {winCount}連勝
-    {/if}
-  </p>
+  <!-- <p>state: {state}</p> -->
 
   <!-- CARD DISPLAY -->
   <div>
-    <p>Dealer cards:</p>
-    <div class="flex justify-center">
+    <p class="mb-2 flex justify-center">
+      <img
+        src={dealerAvatar}
+        alt=""
+        class="w-36 transition-transform hover:scale-105"
+      />
+    </p>
+    <!-- Dealer Cards -->
+    <div class="mb-8 flex justify-center gap-2">
       {#each dealerCards as card, i}
-        <p><img src={card.images.png} alt="" class="w-24" /></p>
+        <p>
+          <img
+            src={card.images.png}
+            alt=""
+            class="w-24 transition-transform hover:scale-105"
+          />
+        </p>
       {/each}
     </div>
-    <p>Dealer total number: {dealerTotalNum}</p>
+    <!-- <p>Dealer total number: {dealerTotalNum}</p> -->
 
-    <p>Your cards:</p>
-    <div class="flex justify-center">
+    <!-- Player Cards -->
+    <div class="mb-4 flex justify-center gap-2">
       {#each playerCards as card, i}
-        <p><img src={card.images.png} alt="" class="w-24" /></p>
+        <p>
+          <img
+            src={card.images.png}
+            alt=""
+            class="w-24 transition-transform hover:scale-105"
+          />
+        </p>
       {/each}
     </div>
-    <p>Your total number: {playerTotalNum}</p>
+    <!-- <p>Your total number: {playerTotalNum}</p> -->
   </div>
   <!-- STATUS DISPLAY -->
+  {#if result}
+    <div class="fixed inset-0 z-20 flex items-center justify-center">
+      <div
+        class="bg-black-800 rounded-sm bg-zinc-800 bg-opacity-80 p-2 text-center font-bold"
+      >
+        <p class="text-3xl">
+          {result}
+        </p>
+        {#if isPlayerBust}
+          <p class="text-xl">Player BUST</p>
+        {/if}
+        {#if isDealerBust}
+          <p class="text-xl">Dealer BUST</p>
+        {/if}
+        {#if isPlayerBlackjack}
+          <p class="text-xl">Player BLACKJACK</p>
+        {/if}
+        {#if isDealerBlackjack}
+          <p class="text-xl">Dealer BLACKJACK</p>
+        {/if}
+      </div>
+    </div>
+  {/if}
   <div>
     {#if !isStarted}
       <button
@@ -249,21 +307,9 @@
         {/if}
       </button>
     {/if}
-    {#if isPlayerBust}
-      <p>Player BUST</p>
-    {/if}
-    {#if isDealerBust}
-      <p>Dealer BUST</p>
-    {/if}
-    {#if isPlayerBlackjack}
-      <p>Player BLACKJACK</p>
-    {/if}
-    {#if isDealerBlackjack}
-      <p>Dealer BLACKJACK</p>
-    {/if}
   </div>
   <!-- GAME CONTROL -->
-  <div>
+  <div class="z-50">
     {#if isStarted}
       {#if isEnded || isPlayerBust}
         {#if (state === 1 || state === 3) && !isPlayerBust}
