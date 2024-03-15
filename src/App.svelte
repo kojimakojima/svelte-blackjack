@@ -86,7 +86,7 @@
         break;
       // Tie
       case 3:
-        "Tie!";
+        result = "Tie!";
         dealerAvatar = dealerAvatarTie;
         break;
       default:
