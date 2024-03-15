@@ -99,12 +99,15 @@
     state = 0;
     result = "";
     deckId = "";
+
     playerCards = [];
     playerTotalNum = 0;
     isPlayerBust = false;
     isPlayerBlackjack = false;
+
     isStand = false;
     is21 = false;
+
     dealerAvatar = dealerAvatarNormal;
     dealerCards = [];
     dealerTotalNum = 0;
@@ -147,23 +150,31 @@
     try {
       const res = await fetch(url);
       const data: DeckType = await res.json();
-      console.log(data);
       playerCards = [...playerCards, ...data.cards];
 
-      playerTotalNum = 0; //Reset to calculate current total
-      // Calculate total num
-      playerCards.map((card: CardType) => {
+      // Reset to calculate current total
+      playerTotalNum = 0;
+      let aceCount = 0; // Keep track of the number of ACEs
+
+      // Calculate total num considering ACE as 11 initially
+      playerCards.forEach((card: CardType) => {
         if (card.value === "ACE") {
-          if (playerTotalNum + 11 > 21) {
-            playerTotalNum++;
-          } else {
-            playerTotalNum += 11;
-          }
+          playerTotalNum += 11;
+          aceCount++;
         } else {
           playerTotalNum += parseNum(card.value);
         }
       });
 
+      // Adjusting for ACEs if total is over 21
+      while (playerTotalNum > 21 && aceCount > 0) {
+        playerTotalNum -= 10; // Adjusting each ACE from 11 to 1
+        aceCount--; // Decrement ACE count after adjustment
+      }
+
+      console.log(
+        "PlayerTotalNum: " + playerTotalNum + ", ACENum: " + aceCount,
+      );
       isPlayerBlackjack = checkBlackjack(playerCards);
       isPlayerBust = checkBust(playerTotalNum);
       if (playerTotalNum === 21) is21 = true;
@@ -179,23 +190,29 @@
       if (dealerTotalNum > 17) return;
       const res = await fetch(url);
       const data: DeckType = await res.json();
-      console.log(data);
       dealerCards = [...dealerCards, ...data.cards];
 
-      dealerTotalNum = 0; //Reset to calculate current total
-      // Calculate total num
-      dealerCards.map((card: CardType) => {
-        if (card.value === "ACE") {
-          if (dealerTotalNum + 11 > 21) {
-            dealerTotalNum++;
-          } else {
-            dealerTotalNum += 11;
-          }
-        } else {
-          dealerTotalNum += parseNum(card.value);
-        }
+      // Reset to calculate current total
+      dealerTotalNum = 0;
+
+      // Firstly Add values for all cards
+      dealerCards.forEach((card: CardType) => {
+        const cardValue = card.value === "ACE" ? 11 : parseNum(card.value);
+        dealerTotalNum += cardValue;
       });
 
+      // Adjust for ACEs after initial total calculation if over 21
+      let aceCount = dealerCards.filter(
+        (card: CardType) => card.value === "ACE",
+      ).length;
+      while (dealerTotalNum > 21 && aceCount > 0) {
+        dealerTotalNum -= 10; // Adjust an ACE from 11 to 1
+        aceCount--;
+      }
+
+      console.log(
+        "DealerTotalNum: " + dealerTotalNum + ", ACENum: " + aceCount,
+      );
       isDealerBlackjack = checkBlackjack(dealerCards);
       isDealerBust = checkBust(dealerTotalNum);
     } catch (e) {
