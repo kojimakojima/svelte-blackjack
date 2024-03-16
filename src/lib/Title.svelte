@@ -18,21 +18,27 @@
 >
   {#if isHoveredH1}
     <span class="text-base">
-      {#if winCount === 1}
+      {#if winCount === 0}
+        <span class="text-lg"> BLACKJACK </span>
+      {:else if winCount === 1}
         Currently: {winCount} Win
-      {:else if winCount > 1}
+      {:else if winCount > 1 && winCount < 10}
         Currently: {winCount} Win Streak
+      {:else if winCount > 9}
+        🎉Congratulations! GAME CLEAR🎉 {winCount} Win Streak
       {/if}
     </span>
-    BLACKJACK
   {:else}
     <span class="text-base">
-      {#if winCount === 1}
+      {#if winCount === 0}
+        <span class="text-lg"> ブラックジャック </span>
+      {:else if winCount === 1}
         現在: {winCount}勝
-      {:else if winCount > 1}
+      {:else if winCount > 1 && winCount < 10}
         現在: {winCount}連勝
+      {:else if winCount > 9}
+        🎉ゲームクリア🎉 {winCount} 連勝
       {/if}
     </span>
-    ブラックジャック
   {/if}
 </h1>
