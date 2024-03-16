@@ -1,6 +1,7 @@
 <script lang="ts">
   import dealerAvatarNormal from "./assets/dealerAvatarNormal.png";
   import dealerAvatarLost from "./assets/dealerAvatarLost.png";
+  import dealerAvatarLost10times from "./assets/dealerAvatarLost10times.png";
   import dealerAvatarWon from "./assets/dealerAvatarWon.png";
   import dealerAvatarTie from "./assets/dealerAvatarTie.png";
 
@@ -118,7 +119,11 @@
       case 1:
         result = "You Won!";
         winCount++;
-        dealerAvatar = dealerAvatarLost;
+        if (winCount > 9) {
+          dealerAvatar = dealerAvatarLost10times;
+        } else {
+          dealerAvatar = dealerAvatarLost;
+        }
         break;
       // Dealer Won
       case 2:
