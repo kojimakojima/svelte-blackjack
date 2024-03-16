@@ -26,7 +26,7 @@
     <p
       on:mouseenter={handleMouseEnterMessage}
       on:mouseleave={handleMouseLeaveMessage}
-      class="w-80 border-2 bg-zinc-900 p-4 text-center font-bold md:w-96"
+      class="w-80 border-2 bg-zinc-900 p-4 text-center font-bold transition-transform hover:scale-105 md:w-96"
     >
       {#if isHoveredMessage}
         <span class="text-sm md:text-base">
