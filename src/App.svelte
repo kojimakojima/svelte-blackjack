@@ -45,10 +45,12 @@
   let dealerTotalNum: number = 0;
   let isDealerBust: boolean = false;
   let isDealerBlackjack: boolean = false;
+  let isDealerMessage: boolean = true;
   // #endregion
 
   // #region Functions
   const start = async () => {
+    isDealerMessage = false;
     await shuffle();
     await dealerDraw(1);
     await playerDraw(1);
@@ -57,7 +59,37 @@
     isStarted = true;
   };
   const restart = async () => {
-    location.reload();
+    //　#region Game State
+    isLoading = false;
+    isStarted = false;
+    isHitting = false;
+    isEnded = false;
+    winCount = 0;
+    state = 0;
+    result = "";
+    // #endregion
+
+    // #region Deck
+    deckId = "";
+    // #endregion
+
+    // #region Player
+    playerCards = [];
+    playerTotalNum = 0;
+    isPlayerBust = false;
+    isPlayerBlackjack = false;
+    isStand = false;
+    is21 = false;
+    // #endregion
+
+    // #region Dealer
+    dealerAvatar = dealerAvatarNormal;
+    dealerCards = [];
+    dealerTotalNum = 0;
+    isDealerBust = false;
+    isDealerBlackjack = false;
+    isDealerMessage = true;
+    // #endregion
   };
   const nextRound = async () => {
     reset();
@@ -235,7 +267,7 @@
 <main class="mx-auto flex max-w-7xl flex-col items-center px-2">
   <Title {winCount} />
   <!-- CARD DISPLAY -->
-  <CardDisplay {dealerAvatar} {dealerCards} {playerCards} />
+  <CardDisplay {dealerAvatar} {dealerCards} {playerCards} {isDealerMessage} />
   <!-- STATUS DISPLAY -->
   {#if result}
     <ResultDisplay
